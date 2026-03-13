@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>OPERACIÓN BACHELOR // CLASIFICADO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&family=Oswald:wght@300;400;700&family=Source+Code+Pro:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --red: #c41e1e;
+  --red-glow: #ff2a2a;
+  --red-dark: #8b0000;
+  --gold: #d4a852;
+  --gold-dim: #a07830;
+  --bg-dark: #0a0a0a;
+  --bg-panel: #111111;
+  --green-term: #00ff41;
+  --amber: #ffb000;
+  --text-dim: #555;
+  --text-light: #999;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg-dark);
+  color: #e0e0e0;
+  font-family: 'Oswald', sans-serif;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px);
+  pointer-events: none;
+  z-index: 9999;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9998;
+  opacity: 0.5;
+}
+
+/* ══════════ ACCESS CODE SCREEN ══════════ */
+#access-screen {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: #000;
+  z-index: 10001;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Share Tech Mono', monospace;
+  color: var(--green-term);
+}
+
+#access-screen.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+
+.access-lock-icon {
+  width: 60px; height: 60px;
+  border: 2px solid var(--gold);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 30px;
+  animation: lockPulse 2s infinite;
+  position: relative;
+}
+
+.access-lock-icon::before {
+  content: '';
+  position: absolute;
+  width: 78px; height: 78px;
+  border: 1px solid var(--gold-dim);
+  border-radius: 50%;
+  animation: rotate 15s linear infinite;
+  border-top-color: transparent;
+  border-left-color: transparent;
+}
+
+.access-lock-icon svg { width: 26px; height: 26px; fill: var(--gold); }
+
+@keyframes lockPulse {
+  0%, 100% { box-shadow: 0 0 15px rgba(212,168,82,0.2); }
+  50% { box-shadow: 0 0 35px rgba(212,168,82,0.5); }
+}
+
+.access-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  letter-spacing: 10px;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.access-subtitle {
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 4px;
+  margin-bottom: 35px;
+}
+
+.code-input-wrapper {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.code-digit {
+  width: 52px; height: 68px;
+  background: #0d0d0d;
+  border: 1px solid #2a2a2a;
+  border-bottom: 2px solid var(--gold-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px;
+  color: var(--gold);
+  transition: all 0.2s ease;
+}
+
+.code-digit.active {
+  border-color: var(--gold);
+  box-shadow: 0 0 15px rgba(212,168,82,0.2);
+}
+
+.code-digit.filled {
+  border-bottom-color: var(--green-term);
+  color: var(--green-term);
+}
+
+.code-digit.error {
+  border-color: var(--red) !important;
+  animation: codeShake 0.4s ease;
+  color: var(--red) !important;
+}
+
+@keyframes codeShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(5px); }
+}
+
+.code-hint {
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  height: 16px;
+}
+
+.code-hint.error-msg { color: var(--red); }
+.code-hint.success-msg { color: var(--green-term); }
+
+#hidden-code-input {
+  position: absolute;
+  opacity: 0;
+  width: 1px; height: 1px;
+  top: 50%; left: 50%;
+  pointer-events: none;
+}
+
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 60px);
+  gap: 8px;
+  margin-top: 25px;
+}
+
+.keypad-btn {
+  width: 60px; height: 50px;
+  background: #111;
+  border: 1px solid #2a2a2a;
+  color: #ccc;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.keypad-btn:hover { background: #1a1a1a; border-color: var(--gold-dim); color: #fff; }
+.keypad-btn:active { background: #222; transform: scale(0.95); }
+.keypad-btn.zero-btn { grid-column: 2; }
+.keypad-btn.del-btn { grid-column: 3; font-size: 13px; color: var(--red); }
+
+/* ══════════ BOOT SEQUENCE ══════════ */
+#boot-screen {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: #000;
+  z-index: 10000;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Share Tech Mono', monospace;
+  color: var(--green-term);
+  transition: opacity 0.8s ease;
+}
+
+#boot-screen.active { display: flex; }
+#boot-screen.hidden { opacity: 0; pointer-events: none; }
+
+#boot-text {
+  font-size: 14px;
+  line-height: 1.8;
+  max-width: 600px;
+  padding: 20px;
+  text-align: left;
+  width: 90%;
+}
+
+#boot-text .line { opacity: 0; animation: bootLine 0.1s forwards; }
+
+@keyframes bootLine { to { opacity: 1; } }
+
+.boot-cursor {
+  display: inline-block;
+  width: 8px; height: 14px;
+  background: var(--green-term);
+  animation: cursorBlink 0.6s infinite;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+
+@keyframes cursorBlink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+/* ══════════ MAIN CONTAINER ══════════ */
+.main-wrapper {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+  position: relative;
+  display: none;
+}
+
+.main-wrapper.visible { display: block; }
+
+.classified-bar {
+  background: var(--red);
+  color: white;
+  text-align: center;
+  padding: 8px 0;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 12px;
+  position: relative;
+  overflow: hidden;
+  animation: fadeSlideDown 0.8s ease both;
+}
+
+.classified-bar::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 50%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  animation: barSweep 3s infinite;
+}
+
+@keyframes barSweep { 0% { left: -50%; } 100% { left: 150%; } }
+
+.header {
+  text-align: center;
+  padding: 50px 20px 30px;
+  position: relative;
+  animation: fadeSlideDown 1s ease 0.2s both;
+}
+
+.header-emblem {
+  width: 90px; height: 90px;
+  border: 2px solid var(--gold);
+  border-radius: 50%;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  animation: emblemPulse 3s infinite;
+}
+
+.header-emblem::before {
+  content: '';
+  position: absolute;
+  width: 110px; height: 110px;
+  border: 1px solid var(--gold-dim);
+  border-radius: 50%;
+  animation: rotate 20s linear infinite;
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+}
+
+.header-emblem svg { width: 40px; height: 40px; fill: var(--gold); }
+
+@keyframes emblemPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(212,168,82,0.2); }
+  50% { box-shadow: 0 0 40px rgba(212,168,82,0.5); }
+}
+
+@keyframes rotate { to { transform: rotate(360deg); } }
+
+.header h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(32px, 8vw, 72px);
+  letter-spacing: 8px;
+  color: #fff;
+  text-shadow: 0 0 30px rgba(196,30,30,0.5);
+  line-height: 1;
+  margin-bottom: 10px;
+}
+
+.header h1 span { color: var(--red); }
+
+.header-sub {
+  font-family: 'Share Tech Mono', monospace;
+  color: var(--text-light);
+  font-size: 13px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+}
+
+.header-line {
+  width: 60%; max-width: 300px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin: 20px auto;
+}
+
+.status-ticker {
+  background: var(--bg-panel);
+  border: 1px solid #222;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin: 20px 0;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  overflow: hidden;
+  animation: fadeSlideDown 0.8s ease 0.4s both;
+}
+
+.status-dot {
+  width: 8px; height: 8px;
+  background: var(--red-glow);
+  border-radius: 50%;
+  animation: dotPulse 1.5s infinite;
+  flex-shrink: 0;
+}
+
+@keyframes dotPulse {
+  0%, 100% { box-shadow: 0 0 4px var(--red-glow); opacity: 1; }
+  50% { box-shadow: 0 0 12px var(--red-glow); opacity: 0.6; }
+}
+
+.ticker-text {
+  color: var(--amber);
+  white-space: nowrap;
+  animation: tickerScroll 20s linear infinite;
+}
+
+@keyframes tickerScroll {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+.dossier-divider {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin: 35px 0;
+  animation: fadeSlideDown 0.8s ease 0.6s both;
+}
+
+.dossier-divider::before,
+.dossier-divider::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, #333, transparent);
+}
+
+.dossier-divider span {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--gold);
+  letter-spacing: 4px;
+  white-space: nowrap;
+}
+
+/* ══════════ VIDEO SECTION — VERTICAL ══════════ */
+.video-section { animation: fadeSlideDown 1s ease 0.8s both; }
+
+.video-panel {
+  background: var(--bg-panel);
+  border: 1px solid #222;
+  position: relative;
+  overflow: hidden;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.video-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #222;
+  background: rgba(20,20,20,0.8);
+}
+
+.video-panel-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rec-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--red);
+}
+
+.rec-dot {
+  width: 6px; height: 6px;
+  background: var(--red-glow);
+  border-radius: 50%;
+  animation: dotPulse 1s infinite;
+}
+
+.video-classification {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+}
+
+.video-panel-header-right {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--amber);
+  letter-spacing: 1px;
+}
+
+.video-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 9/16;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.video-container video,
+.video-container iframe {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.video-placeholder {
+  text-align: center;
+  padding: 20px;
+}
+
+.video-placeholder svg {
+  width: 60px; height: 60px;
+  fill: #333;
+  margin-bottom: 15px;
+}
+
+.video-placeholder p {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+}
+
+.video-container::before,
+.video-container::after {
+  content: '';
+  position: absolute;
+  width: 30px; height: 30px;
+  border-color: var(--red);
+  border-style: solid;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.video-container::before { top: 10px; left: 10px; border-width: 2px 0 0 2px; }
+.video-container::after { bottom: 10px; right: 10px; border-width: 0 2px 2px 0; }
+
+.video-panel-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-top: 1px solid #222;
+  background: rgba(20,20,20,0.8);
+}
+
+.destruct-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--red);
+  animation: warningFlash 2s infinite;
+}
+
+@keyframes warningFlash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.destruct-warning svg { width: 14px; height: 14px; fill: var(--red); }
+
+.auth-badge {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 9px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+  border: 1px solid #2a2a2a;
+  padding: 4px 10px;
+}
+
+.destruct-banner {
+  margin-top: 30px;
+  padding: 20px;
+  border: 1px solid rgba(196,30,30,0.3);
+  background: linear-gradient(180deg, rgba(196,30,30,0.08) 0%, rgba(10,10,10,0) 100%);
+  text-align: center;
+  position: relative;
+  animation: fadeSlideDown 1s ease 1s both;
+}
+
+.destruct-banner::before,
+.destruct-banner::after {
+  content: '⚠';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 20px;
+  color: var(--red);
+  opacity: 0.4;
+}
+
+.destruct-banner::before { left: 15px; }
+.destruct-banner::after { right: 15px; }
+
+.destruct-banner h3 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px;
+  color: var(--red);
+  letter-spacing: 6px;
+  margin-bottom: 5px;
+}
+
+.destruct-banner p {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+}
+
+/* ══════════ COUNTDOWN ══════════ */
+.countdown-section {
+  text-align: center;
+  padding: 40px 20px;
+  animation: fadeSlideDown 1s ease 1.2s both;
+}
+
+.countdown-label {
+  font-family: 'Share Tech Mono', monospace;
+  color: var(--red);
+  font-size: 13px;
+  letter-spacing: 6px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.countdown-sublabel {
+  font-family: 'Source Code Pro', monospace;
+  color: var(--text-dim);
+  font-size: 11px;
+  letter-spacing: 2px;
+  margin-bottom: 25px;
+}
+
+.countdown-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  max-width: 550px;
+  margin: 0 auto;
+}
+
+.countdown-block {
+  background: linear-gradient(180deg, #1a1a1a 0%, #111 100%);
+  border: 1px solid #2a2a2a;
+  padding: 20px 10px 15px;
+  position: relative;
+  overflow: hidden;
+}
+
+.countdown-block::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 2px;
+  background: var(--red);
+  box-shadow: 0 0 10px var(--red-glow);
+}
+
+.countdown-block::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 0;
+  width: 100%; height: 1px;
+  background: rgba(255,255,255,0.03);
+}
+
+.countdown-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(40px, 10vw, 68px);
+  color: #fff;
+  line-height: 1;
+  text-shadow: 0 0 20px rgba(255,42,42,0.3);
+  position: relative;
+  z-index: 1;
+}
+
+.countdown-unit {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-top: 8px;
+}
+
+.countdown-date-target {
+  font-family: 'Share Tech Mono', monospace;
+  color: var(--gold-dim);
+  font-size: 12px;
+  margin-top: 20px;
+  letter-spacing: 2px;
+}
+
+.footer-section {
+  margin-top: 40px;
+  padding: 30px 20px;
+  border-top: 1px solid #1a1a1a;
+  text-align: center;
+  animation: fadeSlideDown 0.8s ease 1.4s both;
+}
+
+.footer-code {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: #333;
+  letter-spacing: 3px;
+  margin-bottom: 10px;
+}
+
+.footer-stamp {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px;
+  letter-spacing: 8px;
+  color: var(--red-dark);
+  opacity: 0.5;
+  transform: rotate(-3deg);
+  display: inline-block;
+  border: 2px solid var(--red-dark);
+  padding: 5px 20px;
+}
+
+@keyframes fadeSlideDown {
+  from { opacity: 0; transform: translateY(-15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes glitchFlicker {
+  0%, 100% { opacity: 1; }
+  92% { opacity: 1; }
+  93% { opacity: 0.3; transform: translate(-2px, 1px); }
+  94% { opacity: 1; transform: translate(0); }
+  96% { opacity: 0.5; transform: translate(1px, -1px); }
+  97% { opacity: 1; transform: translate(0); }
+}
+
+.glitch-text { animation: glitchFlicker 4s infinite; }
+
+.ambient-glow {
+  position: fixed;
+  width: 400px; height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(196,30,30,0.08) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.ambient-glow.top-right { top: -200px; right: -200px; }
+.ambient-glow.bottom-left { bottom: -200px; left: -200px; }
+
+.coords-decoration {
+  position: fixed;
+  bottom: 15px; right: 15px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px;
+  color: #222;
+  letter-spacing: 1px;
+  text-align: right;
+  line-height: 1.6;
+  z-index: 10;
+}
+
+.redacted {
+  background: var(--red-dark);
+  color: transparent;
+  padding: 0 4px;
+  user-select: none;
+}
+
+::selection { background: var(--red); color: #fff; }
+
+/* ══════════ MOBILE ══════════ */
+@media (max-width: 600px) {
+  .main-wrapper { padding: 10px; }
+  .classified-bar { font-size: 13px; letter-spacing: 5px; padding: 6px 0; }
+  .header { padding: 30px 10px 20px; }
+  .header-emblem { width: 70px; height: 70px; }
+  .header-emblem::before { width: 85px; height: 85px; }
+  .header-emblem svg { width: 30px; height: 30px; }
+  .header h1 { letter-spacing: 4px; }
+  .status-ticker { padding: 8px 12px; gap: 10px; }
+  .video-panel { max-width: 100%; }
+  .countdown-grid { gap: 8px; }
+  .countdown-block { padding: 15px 6px 12px; }
+  .countdown-unit { font-size: 8px; letter-spacing: 2px; }
+  .video-panel-header { padding: 10px 12px; flex-wrap: wrap; gap: 5px; }
+  .video-panel-footer { padding: 10px 12px; flex-wrap: wrap; gap: 8px; }
+  .destruct-banner::before, .destruct-banner::after { display: none; }
+  .destruct-banner h3 { font-size: 18px; letter-spacing: 4px; }
+  .destruct-banner p { font-size: 10px; }
+  .coords-decoration { display: none; }
+  .access-title { font-size: 22px; letter-spacing: 6px; }
+  .code-digit { width: 48px; height: 62px; font-size: 32px; }
+  .code-input-wrapper { gap: 10px; }
+}
+</style>
+</head>
+<body>
+
+<div class="ambient-glow top-right"></div>
+<div class="ambient-glow bottom-left"></div>
+
+<!-- ═══════ ACCESS CODE SCREEN ═══════ -->
+<div id="access-screen">
+  <div class="access-lock-icon">
+    <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+  </div>
+  <div class="access-title">ACCESO RESTRINGIDO</div>
+  <div class="access-subtitle">INGRESE CÓDIGO DE AUTORIZACIÓN</div>
+
+  <input type="tel" id="hidden-code-input" maxlength="4" autocomplete="off" inputmode="numeric">
+
+  <div class="code-input-wrapper" id="code-digits">
+    <div class="code-digit active" id="d0"></div>
+    <div class="code-digit" id="d1"></div>
+    <div class="code-digit" id="d2"></div>
+    <div class="code-digit" id="d3"></div>
+  </div>
+
+  <div class="code-hint" id="code-hint">CÓDIGO DE 4 DÍGITOS REQUERIDO</div>
+
+  <div class="keypad" id="keypad">
+    <div class="keypad-btn" data-num="1">1</div>
+    <div class="keypad-btn" data-num="2">2</div>
+    <div class="keypad-btn" data-num="3">3</div>
+    <div class="keypad-btn" data-num="4">4</div>
+    <div class="keypad-btn" data-num="5">5</div>
+    <div class="keypad-btn" data-num="6">6</div>
+    <div class="keypad-btn" data-num="7">7</div>
+    <div class="keypad-btn" data-num="8">8</div>
+    <div class="keypad-btn" data-num="9">9</div>
+    <div class="keypad-btn zero-btn" data-num="0">0</div>
+    <div class="keypad-btn del-btn" data-action="del">DEL</div>
+  </div>
+</div>
+
+<!-- ═══════ BOOT SEQUENCE ═══════ -->
+<div id="boot-screen">
+  <div id="boot-text"></div>
+</div>
+
+<!-- ═══════ MAIN CONTENT ═══════ -->
+<div class="main-wrapper" id="main-content">
+
+  <div class="classified-bar">
+    ■ CLASIFICADO ■ NIVEL MÁXIMO ■ CLASIFICADO ■
+  </div>
+
+  <div class="header">
+    <div class="header-emblem">
+      <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 2.18l7 3.12v4.7c0 4.67-3.13 9.06-7 10.2-3.87-1.14-7-5.53-7-10.2V6.3l7-3.12zM11 7v2h2V7h-2zm0 4v6h2v-6h-2z"/></svg>
+    </div>
+    <h1 class="glitch-text">OPERACIÓN <span>BACHELOR</span></h1>
+    <div class="header-sub">protocolo de comunicación cifrada</div>
+    <div class="header-line"></div>
+  </div>
+
+  <div class="status-ticker">
+    <div class="status-dot"></div>
+    <div class="ticker-text">
+      SISTEMA ACTIVO // OPERACIÓN BACHELOR EN CURSO // PROTOCOLO DE SEGURIDAD NIVEL 5 // CANAL CIFRADO AES-256 // AUTENTICACIÓN VERIFICADA // ACCESO CONCEDIDO //
+    </div>
+  </div>
+
+  <div class="dossier-divider">
+    <span>◆ MENSAJE CLASIFICADO ◆</span>
+  </div>
+
+  <!-- VIDEO SECTION (VERTICAL) — ARRIBA -->
+  <div class="video-section">
+    <div class="video-panel">
+      <div class="video-panel-header">
+        <div class="video-panel-header-left">
+          <div class="rec-indicator">
+            <div class="rec-dot"></div>
+            REC
+          </div>
+          <div class="video-classification">ARCHIVO NIVEL-5 // SOLO LECTURA</div>
+        </div>
+        <div class="video-panel-header-right">
+          <span id="current-time"></span>
+        </div>
+      </div>
+
+      <div class="video-container">
+        <!--
+          ╔═══════════════════════════════════════════════╗
+          ║  INSERTAR TU VIDEO VERTICAL AQUÍ:             ║
+          ║                                               ║
+          ║  Video local (.mp4):                          ║
+          ║  <video controls playsinline poster="">       ║
+          ║    <source src="video.mp4" type="video/mp4">  ║
+          ║  </video>                                     ║
+          ║                                               ║
+          ║  YouTube:                                     ║
+          ║  <iframe src="https://youtube.com/embed/ID"   ║
+          ║   frameborder="0" allowfullscreen></iframe>   ║
+          ╚═══════════════════════════════════════════════╝
+        -->
+        <div class="video-placeholder">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          <p>[ MENSAJE CLASIFICADO ]</p>
+          <p style="margin-top:8px;font-size:10px;color:#333;">PENDIENTE DE CARGA</p>
+        </div>
+      </div>
+
+      <div class="video-panel-footer">
+        <div class="destruct-warning">
+          <svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+          ESTE MENSAJE SE AUTODESTRUIRÁ
+        </div>
+        <div class="auth-badge">AUTORIZACIÓN: <span class="redacted">████████</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="destruct-banner">
+    <h3>⚠ PROTOCOLO DE AUTODESTRUCCIÓN ⚠</h3>
+    <p>ESTE CONTENIDO ES CLASIFICADO // DISTRIBUCIÓN NO AUTORIZADA SERÁ PROCESADA</p>
+  </div>
+
+  <!-- COUNTDOWN — ABAJO -->
+  <div class="countdown-section">
+    <div class="countdown-label">⏱ Tiempo Restante Para Ejecución</div>
+    <div class="countdown-sublabel">PROTOCOLO DE ACTIVACIÓN PROGRAMADO</div>
+    <div class="countdown-grid">
+      <div class="countdown-block">
+        <div class="countdown-num" id="days">--</div>
+        <div class="countdown-unit">Días</div>
+      </div>
+      <div class="countdown-block">
+        <div class="countdown-num" id="hours">--</div>
+        <div class="countdown-unit">Horas</div>
+      </div>
+      <div class="countdown-block">
+        <div class="countdown-num" id="minutes">--</div>
+        <div class="countdown-unit">Min</div>
+      </div>
+      <div class="countdown-block">
+        <div class="countdown-num" id="seconds">--</div>
+        <div class="countdown-unit">Seg</div>
+      </div>
+    </div>
+    <div class="countdown-date-target">OBJETIVO: 10.JUL.2026 // 00:00:00 UTC</div>
+  </div>
+
+  <div class="footer-section">
+    <div class="footer-code">
+      REF: OPR-BACHELOR-<span id="ref-code"></span> // CANAL SEGURO // CIFRADO E2E
+    </div>
+    <div class="footer-stamp">ULTRA SECRETO</div>
+  </div>
+
+</div>
+
+<div class="coords-decoration">
+  LAT <span class="redacted">██.████</span>°N<br>
+  LON <span class="redacted">███.████</span>°W<br>
+  ALT: CLASSIFIED
+</div>
+
+<script>
+// ═══════ ACCESS CODE SYSTEM ═══════
+const CORRECT_CODE = '1508';
+let enteredCode = '';
+const digits = [document.getElementById('d0'), document.getElementById('d1'), document.getElementById('d2'), document.getElementById('d3')];
+const codeHint = document.getElementById('code-hint');
+const accessScreen = document.getElementById('access-screen');
+const hiddenInput = document.getElementById('hidden-code-input');
+
+accessScreen.addEventListener('click', (e) => {
+  if (!e.target.closest('.keypad-btn')) hiddenInput.focus();
+});
+
+function updateDigitDisplay() {
+  digits.forEach((d, i) => {
+    d.textContent = enteredCode[i] || '';
+    d.classList.remove('active', 'filled', 'error');
+    if (i < enteredCode.length) d.classList.add('filled');
+    else if (i === enteredCode.length) d.classList.add('active');
+  });
+}
+
+function addDigit(num) {
+  if (enteredCode.length >= 4) return;
+  enteredCode += num;
+  updateDigitDisplay();
+  if (enteredCode.length === 4) setTimeout(validateCode, 300);
+}
+
+function removeDigit() {
+  if (enteredCode.length === 0) return;
+  enteredCode = enteredCode.slice(0, -1);
+  updateDigitDisplay();
+  codeHint.textContent = 'CÓDIGO DE 4 DÍGITOS REQUERIDO';
+  codeHint.className = 'code-hint';
+}
+
+function validateCode() {
+  if (enteredCode === CORRECT_CODE) {
+    codeHint.textContent = '✓ ACCESO CONCEDIDO';
+    codeHint.className = 'code-hint success-msg';
+    digits.forEach(d => { d.classList.add('filled'); d.classList.remove('error'); });
+    setTimeout(() => {
+      accessScreen.classList.add('hidden');
+      setTimeout(() => {
+        accessScreen.style.display = 'none';
+        startBootSequence();
+      }, 600);
+    }, 800);
+  } else {
+    codeHint.textContent = '✗ CÓDIGO INCORRECTO — INTENTE DE NUEVO';
+    codeHint.className = 'code-hint error-msg';
+    digits.forEach(d => d.classList.add('error'));
+    setTimeout(() => {
+      enteredCode = '';
+      updateDigitDisplay();
+      codeHint.textContent = 'CÓDIGO DE 4 DÍGITOS REQUERIDO';
+      codeHint.className = 'code-hint';
+    }, 1200);
+  }
+}
+
+document.getElementById('keypad').addEventListener('click', (e) => {
+  const btn = e.target.closest('.keypad-btn');
+  if (!btn) return;
+  if (btn.dataset.action === 'del') removeDigit();
+  else if (btn.dataset.num !== undefined) addDigit(btn.dataset.num);
+});
+
+hiddenInput.addEventListener('input', (e) => {
+  const val = e.target.value.replace(/\D/g, '');
+  enteredCode = val.slice(0, 4);
+  updateDigitDisplay();
+  if (enteredCode.length === 4) setTimeout(validateCode, 300);
+  hiddenInput.value = '';
+});
+
+document.addEventListener('keydown', (e) => {
+  if (accessScreen.style.display === 'none') return;
+  if (e.key >= '0' && e.key <= '9') addDigit(e.key);
+  else if (e.key === 'Backspace') removeDigit();
+});
+
+// ═══════ BOOT SEQUENCE ═══════
+const bootLines = [
+  '> Código de acceso verificado... OK',
+  '> Iniciando Operación Bachelor...',
+  '> Estableciendo canal seguro... AES-256-GCM',
+  '> Descifrando mensaje clasificado...',
+  '> Cargando dossier...',
+  '> Nivel de acceso: MÁXIMO',
+  '> Estado: ACTIVO',
+  '',
+  '> BIENVENIDO A LA OPERACIÓN BACHELOR',
+];
+
+function startBootSequence() {
+  const bootScreen = document.getElementById('boot-screen');
+  const bootText = document.getElementById('boot-text');
+  bootScreen.classList.add('active');
+  let lineIndex = 0;
+
+  function showLine() {
+    if (lineIndex < bootLines.length) {
+      const lineEl = document.createElement('div');
+      lineEl.classList.add('line');
+      if (lineIndex === bootLines.length - 1) {
+        lineEl.style.color = '#ff2a2a';
+        lineEl.style.fontWeight = 'bold';
+        lineEl.textContent = bootLines[lineIndex];
+        const cursor = document.createElement('span');
+        cursor.classList.add('boot-cursor');
+        lineEl.appendChild(cursor);
+      } else {
+        lineEl.textContent = bootLines[lineIndex];
+      }
+      bootText.appendChild(lineEl);
+      lineIndex++;
+      setTimeout(showLine, lineIndex === bootLines.length ? 700 : (80 + Math.random() * 180));
+    } else {
+      setTimeout(() => {
+        bootScreen.classList.add('hidden');
+        setTimeout(() => {
+          bootScreen.style.display = 'none';
+          document.getElementById('main-content').classList.add('visible');
+        }, 800);
+      }, 500);
+    }
+  }
+
+  setTimeout(showLine, 400);
+}
+
+// ═══════ COUNTDOWN ═══════
+const targetDate = new Date('2026-07-10T00:00:00Z').getTime();
+
+function updateCountdown() {
+  const diff = targetDate - Date.now();
+  if (diff <= 0) {
+    ['days','hours','minutes','seconds'].forEach(id => document.getElementById(id).textContent = '00');
+    return;
+  }
+  document.getElementById('days').textContent = String(Math.floor(diff / 864e5)).padStart(2, '0');
+  document.getElementById('hours').textContent = String(Math.floor((diff / 36e5) % 24)).padStart(2, '0');
+  document.getElementById('minutes').textContent = String(Math.floor((diff / 6e4) % 60)).padStart(2, '0');
+  document.getElementById('seconds').textContent = String(Math.floor((diff / 1e3) % 60)).padStart(2, '0');
+}
+
+updateCountdown();
+setInterval(updateCountdown, 1000);
+
+// ═══════ LIVE CLOCK ═══════
+function updateClock() {
+  const now = new Date();
+  document.getElementById('current-time').textContent = now.toISOString().replace('T', ' // ').split('.')[0] + ' UTC';
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// ═══════ REF CODE ═══════
+const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+let ref = '';
+for (let i = 0; i < 6; i++) ref += chars[Math.floor(Math.random() * chars.length)];
+document.getElementById('ref-code').textContent = ref;
+</script>
+
+</body>
+</html>
