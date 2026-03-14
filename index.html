@@ -603,6 +603,136 @@ body::after {
   letter-spacing: 2px;
 }
 
+/* ══════════ CUSTOM PLAY COVER ══════════ */
+.video-play-cover {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  cursor: pointer;
+  overflow: hidden;
+  z-index: 4;
+}
+
+.video-thumb {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  filter: brightness(0.35) contrast(1.2) saturate(0.6);
+  transition: filter 0.4s ease;
+}
+
+.video-play-cover:hover .video-thumb {
+  filter: brightness(0.45) contrast(1.2) saturate(0.7);
+}
+
+.video-scanlines {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.2) 2px, rgba(0,0,0,0.2) 4px);
+  pointer-events: none;
+}
+
+.play-btn-wrapper {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.play-btn-ring {
+  position: absolute;
+  width: 90px; height: 90px;
+  border: 2px solid var(--red);
+  border-radius: 50%;
+  top: -10px; left: 50%;
+  transform: translateX(-50%);
+  animation: playRingPulse 2s infinite;
+}
+
+@keyframes playRingPulse {
+  0%, 100% { box-shadow: 0 0 15px rgba(196,30,30,0.3); transform: translateX(-50%) scale(1); }
+  50% { box-shadow: 0 0 35px rgba(255,42,42,0.5); transform: translateX(-50%) scale(1.05); }
+}
+
+.play-btn-icon {
+  width: 70px; height: 70px;
+  background: rgba(196,30,30,0.85);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.video-play-cover:hover .play-btn-icon {
+  background: rgba(255,42,42,0.95);
+  transform: scale(1.08);
+}
+
+.play-btn-icon svg {
+  width: 30px; height: 30px;
+  fill: #fff;
+  margin-left: 4px;
+}
+
+.play-btn-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--red);
+  letter-spacing: 3px;
+  text-shadow: 0 0 10px rgba(196,30,30,0.5);
+  animation: warningFlash 2s infinite;
+}
+
+/* ══════════ FULLSCREEN VIDEO OVERLAY ══════════ */
+.fullscreen-video-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: #000;
+  z-index: 99999;
+  align-items: center;
+  justify-content: center;
+}
+
+.fullscreen-video-overlay.active {
+  display: flex;
+}
+
+.fullscreen-video-overlay iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.fs-close-btn {
+  position: absolute;
+  top: 15px; right: 15px;
+  width: 44px; height: 44px;
+  background: rgba(20,20,20,0.8);
+  border: 1px solid #333;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 100000;
+  transition: all 0.2s ease;
+}
+
+.fs-close-btn:hover { background: rgba(196,30,30,0.8); border-color: var(--red); }
+
+.fs-close-btn svg {
+  width: 22px; height: 22px;
+  fill: #fff;
+}
+
 .video-container::before,
 .video-container::after {
   content: '';
@@ -979,8 +1109,27 @@ body::after {
           </div>
           <div class="decrypt-detail" id="decrypt-detail">PROTOCOLO AES-256-GCM</div>
         </div>
-        <!-- VIDEO -->
-        <iframe id="classified-video" src="https://www.youtube.com/embed/T3zgqmQeih8?rel=0&modestbranding=1&playsinline=1&color=white" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="display:none;"></iframe>
+
+        <!-- CUSTOM PLAY BUTTON (replaces iframe thumbnail) -->
+        <div class="video-play-cover" id="video-play-cover" style="display:none;">
+          <img class="video-thumb" src="https://img.youtube.com/vi/T3zgqmQeih8/0.jpg" alt="Video clasificado">
+          <div class="video-scanlines"></div>
+          <div class="play-btn-wrapper" id="play-btn">
+            <div class="play-btn-ring"></div>
+            <div class="play-btn-icon">
+              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+            <div class="play-btn-label">REPRODUCIR MENSAJE</div>
+          </div>
+        </div>
+
+        <!-- FULLSCREEN VIDEO (hidden until play) -->
+        <div class="fullscreen-video-overlay" id="fullscreen-overlay">
+          <div class="fs-close-btn" id="fs-close-btn">
+            <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+          </div>
+          <iframe id="classified-video" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe>
+        </div>
       </div>
 
       <div class="video-panel-footer">
@@ -1205,11 +1354,16 @@ document.getElementById('ref-code').textContent = ref;
 
 // ═══════ VIDEO DECRYPT LOADING ═══════
 (function() {
-  const video = document.getElementById('classified-video');
   const overlay = document.getElementById('video-loading');
+  const playCover = document.getElementById('video-play-cover');
   const statusEl = document.getElementById('decrypt-status');
   const progressEl = document.getElementById('decrypt-progress');
   const detailEl = document.getElementById('decrypt-detail');
+  const fsOverlay = document.getElementById('fullscreen-overlay');
+  const fsIframe = document.getElementById('classified-video');
+  const closeBtn = document.getElementById('fs-close-btn');
+
+  const YOUTUBE_ID = 'T3zgqmQeih8';
 
   const decryptStages = [
     { msg: 'INICIANDO DESCIFRADO...', detail: 'PROTOCOLO AES-256-GCM', pct: 5 },
@@ -1223,7 +1377,6 @@ document.getElementById('ref-code').textContent = ref;
   ];
 
   let stageIndex = 0;
-  let fakeProgress;
 
   function advanceStage() {
     if (stageIndex < decryptStages.length) {
@@ -1235,14 +1388,14 @@ document.getElementById('ref-code').textContent = ref;
     }
   }
 
-  // Run fake stages every ~600ms
   advanceStage();
-  fakeProgress = setInterval(() => {
+  const fakeProgress = setInterval(() => {
     advanceStage();
     if (stageIndex >= decryptStages.length) clearInterval(fakeProgress);
   }, 700);
 
-  function showVideo() {
+  // After all stages complete → show play cover
+  setTimeout(() => {
     clearInterval(fakeProgress);
     statusEl.textContent = '✓ DESCIFRADO COMPLETO';
     statusEl.style.color = '#00ff41';
@@ -1253,25 +1406,33 @@ document.getElementById('ref-code').textContent = ref;
 
     setTimeout(() => {
       overlay.classList.add('hidden');
-      video.style.display = 'block';
+      playCover.style.display = 'block';
     }, 800);
-  }
+  }, decryptStages.length * 700 + 400);
 
-  // For YouTube iframe: run the decrypt animation for ~5.5s then reveal
-  // (iframes don't fire canplay events, so we use a timed sequence)
-  video.addEventListener('load', function onLoad() {
-    video.removeEventListener('load', onLoad);
-    // Wait until all decrypt stages finish + a beat
-    const remaining = (decryptStages.length - stageIndex) * 700 + 800;
-    setTimeout(showVideo, Math.max(remaining, 500));
+  // PLAY → open fullscreen overlay with autoplay
+  playCover.addEventListener('click', () => {
+    fsIframe.src = 'https://www.youtube.com/embed/' + YOUTUBE_ID + '?autoplay=1&rel=0&modestbranding=1&playsinline=0&fs=1&controls=1';
+    fsOverlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
   });
 
-  // Fallback: if iframe hasn't loaded after 8s, show it anyway
-  setTimeout(() => {
-    if (!overlay.classList.contains('hidden')) {
-      showVideo();
+  // CLOSE fullscreen
+  closeBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    fsOverlay.classList.remove('active');
+    fsIframe.src = '';
+    document.body.style.overflow = '';
+  });
+
+  // Also close with back button / Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && fsOverlay.classList.contains('active')) {
+      fsOverlay.classList.remove('active');
+      fsIframe.src = '';
+      document.body.style.overflow = '';
     }
-  }, 8000);
+  });
 })();
 </script>
 
