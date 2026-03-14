@@ -980,9 +980,7 @@ body::after {
           <div class="decrypt-detail" id="decrypt-detail">PROTOCOLO AES-256-GCM</div>
         </div>
         <!-- VIDEO -->
-        <video id="classified-video" controls playsinline preload="auto" style="display:none;">
-          <source src="https://drive.google.com/uc?export=download&id=1HYKI2Duq92lwmY7s1HIna9tDfzCfYJ0K" type="video/mp4">
-        </video>
+        <iframe id="classified-video" src="https://www.youtube.com/embed/T3zgqmQeih8?rel=0&modestbranding=1&playsinline=1&color=white" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="display:none;"></iframe>
       </div>
 
       <div class="video-panel-footer">
@@ -1259,44 +1257,21 @@ document.getElementById('ref-code').textContent = ref;
     }, 800);
   }
 
-  // When video has enough data to play
-  video.addEventListener('canplay', function onCanPlay() {
-    video.removeEventListener('canplay', onCanPlay);
-    // Ensure at least the fake animation runs a bit
-    const minDelay = Math.max(0, 3500 - performance.now());
-    setTimeout(showVideo, minDelay);
+  // For YouTube iframe: run the decrypt animation for ~5.5s then reveal
+  // (iframes don't fire canplay events, so we use a timed sequence)
+  video.addEventListener('load', function onLoad() {
+    video.removeEventListener('load', onLoad);
+    // Wait until all decrypt stages finish + a beat
+    const remaining = (decryptStages.length - stageIndex) * 700 + 800;
+    setTimeout(showVideo, Math.max(remaining, 500));
   });
 
-  // Fallback: if video errors (GDrive can block direct), show a clickable fallback
-  video.addEventListener('error', function onError() {
-    video.removeEventListener('error', onError);
-    clearInterval(fakeProgress);
-    statusEl.textContent = '⚠ ACCESO RESTRINGIDO POR ORIGEN';
-    statusEl.style.color = 'var(--amber)';
-    detailEl.textContent = 'TOQUE PARA ABRIR CANAL ALTERNATIVO';
-    progressEl.style.width = '100%';
-    progressEl.style.background = 'var(--amber)';
-    overlay.style.cursor = 'pointer';
-    overlay.addEventListener('click', () => {
-      window.open('https://drive.google.com/file/d/1HYKI2Duq92lwmY7s1HIna9tDfzCfYJ0K/view', '_blank');
-    });
-  });
-
-  // Extra fallback: if after 15s still no canplay, assume slow network and show anyway
+  // Fallback: if iframe hasn't loaded after 8s, show it anyway
   setTimeout(() => {
     if (!overlay.classList.contains('hidden')) {
-      if (video.readyState >= 2) {
-        showVideo();
-      } else {
-        // Try showing video anyway, it might buffer-play
-        statusEl.textContent = 'CARGANDO TRANSMISIÓN...';
-        detailEl.textContent = 'CONEXIÓN LENTA DETECTADA';
-        progressEl.style.width = '100%';
-        video.style.display = 'block';
-        setTimeout(() => { overlay.classList.add('hidden'); }, 1500);
-      }
+      showVideo();
     }
-  }, 15000);
+  }, 8000);
 })();
 </script>
 
