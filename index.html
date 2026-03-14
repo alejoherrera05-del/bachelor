@@ -695,55 +695,41 @@ body::after {
   animation: warningFlash 2s infinite;
 }
 
-/* ══════════ FULLSCREEN VIDEO OVERLAY ══════════ */
-.fullscreen-video-overlay {
+/* ══════════ (fullscreen handled by native YouTube) ══════════ */
+
+/* ══════════ FULLSCREEN VIDEO WRAPPER ══════════ */
+.fs-video-wrapper {
   display: none;
   position: fixed;
   top: 0; left: 0;
   width: 100vw; height: 100vh;
   background: #000;
   z-index: 99999;
-  align-items: center;
-  justify-content: center;
 }
 
-.fullscreen-video-overlay.active {
-  display: flex;
+.fs-video-wrapper.active {
+  display: block;
 }
 
-.fullscreen-video-overlay iframe,
-.fullscreen-video-overlay #yt-player-container {
+/* When in actual browser fullscreen */
+.fs-video-wrapper:fullscreen,
+.fs-video-wrapper:-webkit-full-screen,
+.fs-video-wrapper:-moz-full-screen {
+  width: 100%; height: 100%;
+  background: #000;
+}
+
+.fs-video-wrapper iframe,
+#fs-video-player {
   width: 100%;
   height: 100%;
   border: none;
 }
 
-.fullscreen-video-overlay #yt-player-container iframe {
+.fs-video-wrapper iframe {
   width: 100%;
   height: 100%;
   border: none;
-}
-
-.fs-close-btn {
-  position: absolute;
-  top: 15px; right: 15px;
-  width: 44px; height: 44px;
-  background: rgba(20,20,20,0.8);
-  border: 1px solid #333;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 100000;
-  transition: all 0.2s ease;
-}
-
-.fs-close-btn:hover { background: rgba(196,30,30,0.8); border-color: var(--red); }
-
-.fs-close-btn svg {
-  width: 22px; height: 22px;
-  fill: #fff;
 }
 
 .video-container::before,
@@ -1142,7 +1128,7 @@ body::after {
           <div class="decrypt-detail" id="decrypt-detail">PROTOCOLO AES-256-GCM</div>
         </div>
 
-        <!-- CUSTOM PLAY BUTTON (replaces iframe thumbnail) -->
+        <!-- CUSTOM PLAY BUTTON -->
         <div class="video-play-cover" id="video-play-cover" style="display:none;">
           <img class="video-thumb" src="https://img.youtube.com/vi/T3zgqmQeih8/0.jpg" alt="Video clasificado">
           <div class="video-scanlines"></div>
@@ -1154,15 +1140,12 @@ body::after {
             <div class="play-btn-label">REPRODUCIR MENSAJE</div>
           </div>
         </div>
-
-        <!-- FULLSCREEN VIDEO (hidden until play) -->
-        <div class="fullscreen-video-overlay" id="fullscreen-overlay">
-          <div class="fs-close-btn" id="fs-close-btn">
-            <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-          </div>
-          <div id="yt-player-container"></div>
-        </div>
       </div>
+
+<!-- FULLSCREEN VIDEO WRAPPER (outside video-container, used for requestFullscreen) -->
+<div id="fs-video-wrapper" class="fs-video-wrapper">
+  <div id="fs-video-player"></div>
+</div>
 
       <div class="video-panel-footer">
         <div class="destruct-warning">
@@ -1384,23 +1367,13 @@ let ref = '';
 for (let i = 0; i < 6; i++) ref += chars[Math.floor(Math.random() * chars.length)];
 document.getElementById('ref-code').textContent = ref;
 
-// ═══════ VIDEO DECRYPT LOADING + YOUTUBE PLAYER API ═══════
+// ═══════ VIDEO DECRYPT LOADING ═══════
 (function() {
   const overlay = document.getElementById('video-loading');
   const playCover = document.getElementById('video-play-cover');
   const statusEl = document.getElementById('decrypt-status');
   const progressEl = document.getElementById('decrypt-progress');
   const detailEl = document.getElementById('decrypt-detail');
-  const fsOverlay = document.getElementById('fullscreen-overlay');
-  const closeBtn = document.getElementById('fs-close-btn');
-
-  const YOUTUBE_ID = 'T3zgqmQeih8';
-  let ytPlayer = null;
-
-  // Load YouTube IFrame API
-  const tag = document.createElement('script');
-  tag.src = 'https://www.youtube.com/iframe_api';
-  document.head.appendChild(tag);
 
   const decryptStages = [
     { msg: 'INICIANDO DESCIFRADO...', detail: 'PROTOCOLO AES-256-GCM', pct: 5 },
@@ -1431,7 +1404,7 @@ document.getElementById('ref-code').textContent = ref;
     if (stageIndex >= decryptStages.length) clearInterval(fakeProgress);
   }, 700);
 
-  // After all stages complete → show play cover
+  // After decrypt animation → show play cover
   setTimeout(() => {
     clearInterval(fakeProgress);
     statusEl.textContent = '✓ DESCIFRADO COMPLETO';
@@ -1447,74 +1420,50 @@ document.getElementById('ref-code').textContent = ref;
     }, 800);
   }, decryptStages.length * 700 + 400);
 
-  // PLAY → create YT player and autoplay immediately
+  // ONE TAP → fullscreen + autoplay
+  const fsWrapper = document.getElementById('fs-video-wrapper');
+  const fsPlayer = document.getElementById('fs-video-player');
+  const YOUTUBE_ID = 'T3zgqmQeih8';
+
   playCover.addEventListener('click', () => {
-    fsOverlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
+    // 1. Show the wrapper (needed for fullscreen request)
+    fsWrapper.classList.add('active');
 
-    if (ytPlayer) {
-      ytPlayer.destroy();
-      ytPlayer = null;
-    }
+    // 2. Create the iframe with autoplay
+    fsPlayer.innerHTML = '<iframe src="https://www.youtube.com/embed/' + YOUTUBE_ID +
+      '?autoplay=1&mute=0&rel=0&modestbranding=1&playsinline=1&controls=1&fs=1&iv_load_policy=3" ' +
+      'frameborder="0" allow="autoplay; fullscreen; encrypted-media" allowfullscreen ' +
+      'style="width:100%;height:100%;border:none;"></iframe>';
 
-    // Small delay so the overlay is visible before creating player
-    setTimeout(() => {
-      ytPlayer = new YT.Player('yt-player-container', {
-        videoId: YOUTUBE_ID,
-        width: '100%',
-        height: '100%',
-        playerVars: {
-          autoplay: 1,
-          rel: 0,
-          modestbranding: 1,
-          playsinline: 1,
-          controls: 1,
-          fs: 0,
-          showinfo: 0,
-          iv_load_policy: 3
-        },
-        events: {
-          onReady: function(event) {
-            event.target.playVideo();
-          },
-          onStateChange: function(event) {
-            // When video ends, close the overlay
-            if (event.data === YT.PlayerState.ENDED) {
-              closeFullscreen();
-            }
-          }
-        }
+    // 3. Request browser fullscreen on the wrapper (user gesture = allowed)
+    var el = fsWrapper;
+    var rfs = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+    if (rfs) {
+      rfs.call(el).catch(function() {
+        // If fullscreen fails (some browsers), the wrapper is still visible as a full-viewport overlay
       });
-    }, 100);
+    }
   });
 
-  function closeFullscreen() {
-    fsOverlay.classList.remove('active');
-    document.body.style.overflow = '';
-    if (ytPlayer) {
-      ytPlayer.destroy();
-      ytPlayer = null;
-      // Recreate the container div for next time
-      const container = document.createElement('div');
-      container.id = 'yt-player-container';
-      fsOverlay.appendChild(container);
+  // When exiting fullscreen (ESC or back), clean up
+  function onFsChange() {
+    var fsEl = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+    if (!fsEl && fsWrapper.classList.contains('active')) {
+      fsWrapper.classList.remove('active');
+      fsPlayer.innerHTML = '';
     }
   }
 
-  // CLOSE fullscreen
-  closeBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    closeFullscreen();
-  });
-
-  // Escape key
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && fsOverlay.classList.contains('active')) {
-      closeFullscreen();
-    }
-  });
+  document.addEventListener('fullscreenchange', onFsChange);
+  document.addEventListener('webkitfullscreenchange', onFsChange);
+  document.addEventListener('mozfullscreenchange', onFsChange);
+  document.addEventListener('MSFullscreenChange', onFsChange);
 })();
+
+// YouTube IFrame API callback (must be global)
+function onYouTubeIframeAPIReady() {}
 </script>
+<script src="https://www.youtube.com/iframe_api"></script>
 
 </body>
 </html>
